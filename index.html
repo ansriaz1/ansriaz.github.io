@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Who Will Pay The Bill?</title>
+    <style>
+        :root {
+            --neon-gold: #ffcc00;
+            --neon-red: #ff3131;
+            --dark-bg: #0a0a0a;
+        }
+
+        body {
+            background-color: var(--dark-bg);
+            color: white;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 500px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 30px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 204, 0, 0.3);
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            margin-top: 50px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+
+        h1 {
+            color: var(--neon-gold);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            text-shadow: 0 0 10px var(--neon-gold);
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        input {
+            background: #151515;
+            border: 1px solid #333;
+            color: white;
+            padding: 12px;
+            width: 80%;
+            border-radius: 8px;
+            font-size: 1rem;
+            text-align: center;
+            transition: 0.3s;
+        }
+
+        input:focus {
+            border-color: var(--neon-gold);
+            outline: none;
+            box-shadow: 0 0 10px rgba(255, 204, 0, 0.2);
+        }
+
+        button {
+            background: var(--neon-gold);
+            color: black;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: 0.3s;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 204, 0, 0.4);
+        }
+
+        #names-container {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .name-input {
+            animation: slideIn 0.4s ease forwards;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        #result-area {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .winner-box {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--neon-red);
+            text-shadow: 0 0 10px var(--neon-red);
+            margin-top: 15px;
+        }
+
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--neon-gold);
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            display: none;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        footer {
+            margin-top: auto;
+            padding: 20px;
+            font-size: 0.8rem;
+            opacity: 0.5;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>The Reckoning</h1>
+        
+        <div id="setup-step">
+            <div class="input-group">
+                <label>How many people are dining?</label>
+                <input type="number" id="people-count" min="2" placeholder="e.g. 4">
+            </div>
+            <button onclick="generateInputs()">Enter Names</button>
+        </div>
+
+        <div id="names-step" style="display:none;">
+            <p>Who is at the table?</p>
+            <div id="names-container"></div>
+            <button onclick="pickPayer()" style="margin-top: 20px; background: var(--neon-red); color: white;">Determine Fate</button>
+        </div>
+
+        <div class="loader" id="loader"></div>
+
+        <div id="result-area">
+            <p>The decision has been made...</p>
+            <div id="winner-display" class="winner-box"></div>
+            <button onclick="resetGame()" style="margin-top: 20px; font-size: 0.7rem; background: #333; color: white;">Try Again</button>
+        </div>
+    </div>
+
+    <footer>
+        WHO WILL PAY THE BILL? &copy; 2026
+    </footer>
+
+    <script>
+        function generateInputs() {
+            const count = document.getElementById('people-count').value;
+            if (count < 2) {
+                alert("You need at least 2 people to play!");
+                return;
+            }
+
+            const container = document.getElementById('names-container');
+            container.innerHTML = '';
+            
+            for (let i = 0; i < count; i++) {
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.placeholder = `Person ${i + 1} Name`;
+                input.className = 'name-input';
+                input.required = true;
+                container.appendChild(input);
+            }
+
+            document.getElementById('setup-step').style.display = 'none';
+            document.getElementById('names-step').style.display = 'block';
+        }
+
+        function pickPayer() {
+            const inputs = document.querySelectorAll('.name-input');
+            const names = [];
+            
+            for (let input of inputs) {
+                if (input.value.trim() === "") {
+                    alert("Please fill in all names!");
+                    return;
+                }
+                names.push(input.value.trim());
+            }
+
+            // UI Transitions
+            document.getElementById('names-step').style.display = 'none';
+            document.getElementById('loader').style.display = 'block';
+
+            // Simulate "Thinking"
+            setTimeout(() => {
+                const randomIndex = Math.floor(Math.random() * names.length);
+                const winner = names[randomIndex];
+                
+                document.getElementById('loader').style.display = 'none';
+                document.getElementById('result-area').style.display = 'block';
+                document.getElementById('winner-display').innerText = `${winner.toUpperCase()} PAYS THE BILL!`;
+            }, 2000);
+        }
+
+        function resetGame() {
+            document.getElementById('result-area').style.display = 'none';
+            document.getElementById('setup-step').style.display = 'block';
+            document.getElementById('people-count').value = '';
+        }
+    </script>
+</body>
+</html>
